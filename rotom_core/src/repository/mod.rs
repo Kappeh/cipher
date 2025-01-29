@@ -10,7 +10,7 @@ pub trait RepositoryProvider {
     where
         Self: 'a;
 
-    async fn get(&self) -> Result<Self::Repository<'_>, Self::BackendError>;
+    async fn get(&self) -> Result<Self::Repository<'_>, RepositoryError<Self::BackendError>>;
 }
 
 pub trait Repository
@@ -19,3 +19,6 @@ where
 {
     type BackendError: std::error::Error;
 }
+
+#[derive(Debug)]
+pub struct RepositoryError<E>(pub E);

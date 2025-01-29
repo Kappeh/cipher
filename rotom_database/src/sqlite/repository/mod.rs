@@ -3,6 +3,7 @@ use diesel_async::pooled_connection::bb8::Pool;
 use diesel_async::pooled_connection::bb8::PooledConnection;
 use diesel_async::sync_connection_wrapper::SyncConnectionWrapper;
 use rotom_core::repository::Repository;
+use rotom_core::repository::RepositoryError;
 use rotom_core::repository::RepositoryProvider;
 
 use crate::BackendError;
@@ -39,7 +40,11 @@ impl RepositoryProvider for SqliteRepositoryProvider {
 
     type Repository<'a> = SqliteRepository<'a>;
 
-    async fn get(&self) -> Result<Self::Repository<'_>, Self::BackendError> {
-        self.pool.get().await.map(SqliteRepository::new).map_err(BackendError::from)
+    async fn get(&self) -> Result<Self::Repository<'_>, RepositoryError<Self::BackendError>> {
+        self.pool
+            .get()
+            .await
+            .map(SqliteRepository::new)
+            .map_err(|err| RepositoryError(BackendError::from(err)))
     }
 }

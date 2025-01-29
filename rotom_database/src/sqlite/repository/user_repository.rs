@@ -5,6 +5,7 @@ use diesel_async::RunQueryDsl;
 use rotom_core::repository::user_repository::NewUser;
 use rotom_core::repository::user_repository::User;
 use rotom_core::repository::user_repository::UserRepository;
+use rotom_core::repository::RepositoryError;
 
 use crate::sqlite::schema::users;
 use crate::BackendError;
@@ -16,16 +17,16 @@ use super::SqliteRepository;
 impl UserRepository for SqliteRepository<'_> {
     type BackendError = BackendError;
 
-    async fn user(&mut self, id: i32) -> Result<Option<User>, Self::BackendError> {
+    async fn user(&mut self, id: i32) -> Result<Option<User>, RepositoryError<Self::BackendError>> {
         users::dsl::users.find(id)
             .first::<ModelUser>(&mut self.conn)
             .await
             .optional()
             .map(|option| option.map(User::from))
-            .map_err(BackendError::from)
+            .map_err(|err| RepositoryError(BackendError::from(err)))
     }
 
-    async fn insert_user(&mut self, new_user: NewUser) -> Result<User, Self::BackendError> {
+    async fn insert_user(&mut self, new_user: NewUser) -> Result<User, RepositoryError<Self::BackendError>> {
         let model_new_user = ModelNewUser::from(new_user);
 
         self.conn
@@ -38,10 +39,10 @@ impl UserRepository for SqliteRepository<'_> {
             }.scope_boxed())
             .await
             .map(User::from)
-            .map_err(BackendError::from)
+            .map_err(|err| RepositoryError(BackendError::from(err)))
     }
 
-    async fn update_user(&mut self, user: User) -> Result<Option<User>, Self::BackendError> {
+    async fn update_user(&mut self, user: User) -> Result<Option<User>, RepositoryError<Self::BackendError>> {
         let model_user = ModelUser::from(user);
 
         self.conn
@@ -66,10 +67,10 @@ impl UserRepository for SqliteRepository<'_> {
             }.scope_boxed())
             .await
             .map(|option| option.map(User::from))
-            .map_err(BackendError::from)
+            .map_err(|err| RepositoryError(BackendError::from(err)))
     }
 
-    async fn remove_user(&mut self, id: i32) -> Result<Option<User>, Self::BackendError> {
+    async fn remove_user(&mut self, id: i32) -> Result<Option<User>, RepositoryError<Self::BackendError>> {
         self.conn
             .transaction::<_, diesel::result::Error, _>(move |conn| async move {
                 diesel::delete(users::dsl::users.find(id))
@@ -80,7 +81,7 @@ impl UserRepository for SqliteRepository<'_> {
             }.scope_boxed())
             .await
             .map(|option| option.map(User::from))
-            .map_err(BackendError::from)
+            .map_err(|err| RepositoryError(BackendError::from(err)))
     }
 }
 

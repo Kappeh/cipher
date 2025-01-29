@@ -2,6 +2,7 @@ use diesel_async::pooled_connection::bb8::Pool;
 use diesel_async::pooled_connection::bb8::PooledConnection;
 use diesel_async::AsyncMysqlConnection;
 use rotom_core::repository::Repository;
+use rotom_core::repository::RepositoryError;
 use rotom_core::repository::RepositoryProvider;
 
 use crate::BackendError;
@@ -38,7 +39,11 @@ impl RepositoryProvider for MysqlRepositoryProvider {
 
     type Repository<'a> = MysqlRepository<'a>;
 
-    async fn get(&self) -> Result<Self::Repository<'_>, Self::BackendError> {
-        self.pool.get().await.map(MysqlRepository::new).map_err(BackendError::from)
+    async fn get(&self) -> Result<Self::Repository<'_>, RepositoryError<Self::BackendError>> {
+        self.pool
+            .get()
+            .await
+            .map(MysqlRepository::new)
+            .map_err(|err| RepositoryError(BackendError::from(err)))
     }
 }

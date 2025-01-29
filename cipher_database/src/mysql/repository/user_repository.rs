@@ -26,6 +26,18 @@ impl UserRepository for MysqlRepository<'_> {
             .map_err(|err| RepositoryError(BackendError::from(err)))
     }
 
+    async fn user_by_discord_user_id(&mut self, id: u64) -> Result<Option<User>, RepositoryError<Self::BackendError>> {
+        let model_id = id as i64;
+
+        users::dsl::users
+            .filter(users::dsl::discord_user_id.eq(model_id))
+            .first::<ModelUser>(&mut self.conn)
+            .await
+            .optional()
+            .map(|option| option.map(User::from))
+            .map_err(|err| RepositoryError(BackendError::from(err)))
+    }
+
     async fn insert_user(&mut self, new_user: NewUser) -> Result<User, RepositoryError<Self::BackendError>> {
         let model_new_user = ModelNewUser::from(new_user);
 

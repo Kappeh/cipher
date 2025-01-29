@@ -1,0 +1,14 @@
+[package]
+name = "rotom_discord_bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rotom_core = { path = "../rotom_core" }
+rotom_database = { path = "../rotom_database", default-features = false }
+
+[features]
+default = ["mysql", "postgres", "sqlite"]
+mysql = ["rotom_database/mysql"]
+postgres = ["rotom_database/postgres"]
+sqlite = ["rotom_database/sqlite"]

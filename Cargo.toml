@@ -3,5 +3,5 @@ resolver = "2"
 
 members = [
     "rotom_core",
-    "rotom_database",
+    "rotom_database", "rotom_discord_bot",
 ]

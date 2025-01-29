@@ -1298,6 +1298,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rotom_discord_bot"
+version = "0.1.0"
+dependencies = [
+ "rotom_core",
+ "rotom_database",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"

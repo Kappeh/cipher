@@ -23,6 +23,8 @@ pub enum BackendError {
     DieselQueryError(#[from] diesel::result::Error),
     #[error(transparent)]
     DieselMigrationError(Box<dyn std::error::Error + Send + Sync>),
+    #[error(transparent)]
+    Bb8RunError(#[from] diesel_async::pooled_connection::bb8::RunError),
 }
 
 impl From<diesel_async::pooled_connection::PoolError> for BackendError {

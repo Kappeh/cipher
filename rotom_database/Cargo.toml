@@ -4,9 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+async-trait = "0.1.85"
 diesel = { version = "2.2.6", default_features = false }
 diesel-async = { version = "0.5.2", features = ["bb8"] }
 diesel_migrations = "2.2.0"
+rotom_core = { path = "../rotom_core" }
 thiserror = "2.0.11"
 
 [features]

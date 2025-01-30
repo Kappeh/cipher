@@ -3,7 +3,6 @@ use cipher_core::repository::RepositoryProvider;
 use crate::app::AppCommand;
 
 mod help;
-mod ping;
 mod profile;
 
 pub fn commands<R>() -> Vec<AppCommand<R, R::BackendError>>
@@ -12,7 +11,6 @@ where
 {
     vec![
         help::help(),
-        ping::ping(),
         profile::profile(),
     ]
 }

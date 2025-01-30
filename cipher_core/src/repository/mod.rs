@@ -6,7 +6,7 @@ pub mod user_repository;
 
 #[async_trait::async_trait]
 pub trait RepositoryProvider {
-    type BackendError: std::error::Error;
+    type BackendError: std::error::Error + Send + Sync;
 
     type Repository<'a>: Repository<BackendError = <Self as RepositoryProvider>::BackendError> + Send + Sync
     where

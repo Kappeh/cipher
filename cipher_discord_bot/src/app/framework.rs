@@ -2,6 +2,7 @@ use poise::Framework;
 use poise::FrameworkOptions;
 use cipher_core::repository::RepositoryProvider;
 
+use crate::cli::AppInfo;
 use crate::commands;
 
 use super::event_handler;
@@ -9,7 +10,7 @@ use super::on_error;
 use super::AppData;
 use super::AppError;
 
-pub fn framework<R>(repository_provider: R) -> Framework<AppData<R>, AppError<R::BackendError>>
+pub fn framework<R>(repository_provider: R, info: AppInfo) -> Framework<AppData<R>, AppError<R::BackendError>>
 where
     R: RepositoryProvider + Send + Sync + 'static,
     R::BackendError: Send + Sync,
@@ -20,6 +21,7 @@ where
     let app_data = AppData {
         repository_provider,
         qualified_command_names: commands::qualified_command_names(&commands),
+        info,
     };
 
     let options = FrameworkOptions::<AppData<R>, AppError<R::BackendError>> {

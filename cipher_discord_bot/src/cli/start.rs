@@ -1,6 +1,7 @@
 use clap::Parser;
 use secrecy::ExposeSecret;
 
+use super::AppInfo;
 use super::DatabaseCredentials;
 use super::DiscordCredentials;
 
@@ -14,6 +15,10 @@ pub struct Start {
     /// Credentials required to authenticate a bot with Discord.
     #[command(flatten)]
     pub discord: DiscordCredentials,
+
+    /// Information about the application
+    #[command(flatten)]
+    pub info: AppInfo,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -37,7 +42,7 @@ impl Start {
                 cipher_database::mysql::run_pending_migrations(database_url)?;
                 let repository_provider = cipher_database::mysql::repository_provider(database_url).await?;
                 log::info!("Starting discord application.");
-                crate::app::start(self.discord, repository_provider).await?;
+                crate::app::start(self.discord, self.info, repository_provider).await?;
             },
             #[cfg(feature = "postgres")]
             crate::cli::DatabaseDialect::Postgres => {
@@ -45,7 +50,7 @@ impl Start {
                 cipher_database::postgres::run_pending_migrations(database_url)?;
                 let repository_provider = cipher_database::postgres::repository_provider(database_url).await?;
                 log::info!("Starting discord application.");
-                crate::app::start(self.discord, repository_provider).await?;
+                crate::app::start(self.discord, self.info, repository_provider).await?;
             },
             #[cfg(feature = "sqlite")]
             crate::cli::DatabaseDialect::Sqlite => {
@@ -53,7 +58,7 @@ impl Start {
                 cipher_database::sqlite::run_pending_migrations(database_url)?;
                 let repository_provider = cipher_database::sqlite::repository_provider(database_url).await?;
                 log::info!("Starting discord application.");
-                crate::app::start(self.discord, repository_provider).await?;
+                crate::app::start(self.discord, self.info, repository_provider).await?;
             },
         }
 

@@ -2,6 +2,7 @@ use cipher_core::repository::RepositoryProvider;
 
 use crate::app::AppCommand;
 
+mod about;
 mod help;
 mod profile;
 
@@ -10,6 +11,7 @@ where
     R: RepositoryProvider + Send + Sync + 'static,
 {
     vec![
+        about::about(),
         help::help(),
         profile::profile(),
     ]

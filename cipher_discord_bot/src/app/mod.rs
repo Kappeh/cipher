@@ -4,6 +4,7 @@ use secrecy::ExposeSecret;
 use serenity::all::GatewayIntents;
 use serenity::Client;
 
+use crate::cli::AppInfo;
 use crate::cli::DiscordCredentials;
 
 mod event_handler;
@@ -19,6 +20,7 @@ pub enum AppStartError {
 pub struct AppData<R> {
     repository_provider: R,
     qualified_command_names: Vec<String>,
+    info: AppInfo,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -32,14 +34,14 @@ pub enum AppError<E> {
 pub type AppContext<'a, R, E> = poise::ApplicationContext<'a, AppData<R>, AppError<E>>;
 pub type AppCommand<R, E> = poise::Command<AppData<R>, AppError<E>>;
 
-pub async fn start<R>(credentials: DiscordCredentials, repository_provider: R) -> Result<(), AppStartError>
+pub async fn start<R>(credentials: DiscordCredentials, info: AppInfo, repository_provider: R) -> Result<(), AppStartError>
 where
     R: RepositoryProvider + Send + Sync + 'static,
     R::BackendError: Send + Sync,
     for<'a> R::Repository<'a>: Send + Sync,
 {
     let mut client = Client::builder(credentials.bot_token.expose_secret(), GatewayIntents::all())
-        .framework(framework::framework(repository_provider))
+        .framework(framework::framework(repository_provider, info))
         .await?;
 
     let shard_manager = client.shard_manager.clone();
@@ -66,5 +68,9 @@ where
 impl<R> AppData<R> {
     pub fn qualified_command_names(&self) -> &[String] {
         &self.qualified_command_names
+    }
+
+    pub fn info(&self) -> &AppInfo {
+        &self.info
     }
 }

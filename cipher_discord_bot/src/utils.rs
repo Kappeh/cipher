@@ -1,7 +1,7 @@
 use cipher_core::repository::RepositoryProvider;
 use serenity::all::{Color, GuildId};
 
-use crate::app::{AppCommand, AppContext};
+use crate::app::{AppCommand, AppContext, AppError};
 
 pub async fn register_in_guilds<R>(
     serenity_ctx: &serenity::client::Context,
@@ -32,4 +32,26 @@ where
     };
 
     member.and_then(|m| m.colour(ctx)).unwrap_or(Color::BLURPLE)
+}
+
+pub async fn bot_avatar_url<R>(ctx: &AppContext<'_, R, R::BackendError>) -> Result<String, AppError<R::BackendError>>
+where
+    R: RepositoryProvider + Send + Sync,
+{
+    let member_avatar_url = match ctx.guild_id() {
+        Some(guild) => guild.member(ctx, ctx.framework.bot_id).await?.avatar_url(),
+        None => None,
+    };
+
+    let avatar_url = match member_avatar_url {
+        Some(url) => url,
+        None => {
+            let user = ctx.framework.bot_id.to_user(ctx).await?;
+            user.avatar_url()
+                .or_else(|| user.static_avatar_url())
+                .unwrap_or_else(|| user.default_avatar_url())
+        },
+    };
+
+    Ok(avatar_url)
 }

@@ -5,6 +5,7 @@ use clap::Parser;
 use clap::ValueEnum;
 use command::Command;
 use secrecy::SecretString;
+use url::Url;
 
 pub mod command;
 pub mod start;
@@ -145,4 +146,59 @@ pub struct DiscordCredentials {
         hide_env_values(true),
     )]
     pub bot_token: SecretString,
+}
+
+/// Information about the application
+#[derive(Clone, Debug, Parser)]
+pub struct AppInfo {
+    /// The displayed name of the application
+    #[arg(
+        short = None,
+        long = "app-name",
+        env = "APP_NAME",
+        default_value = env!("CARGO_PKG_NAME"),
+    )]
+    pub name: String,
+
+    // The displayed version of the application
+    #[arg(
+        short = None,
+        long = "app-version",
+        env = "APP_VERSION",
+        default_value = env!("CARGO_PKG_VERSION"),
+    )]
+    pub version: String,
+
+    /// The displayed description of the application
+    #[arg(
+        short = None,
+        long = "app-description",
+        env = "APP_DESCRIPTION",
+        default_value = env!("CARGO_PKG_DESCRIPTION"),
+    )]
+    pub description: String,
+
+    /// The displayed about title of the application
+    #[arg(
+        short = None,
+        long = "about-title",
+        env = "ABOUT_TITLE",
+    )]
+    pub about_title: String,
+
+    /// The displayed about description of the application
+    #[arg(
+        short = None,
+        long = "about-description",
+        env = "ABOUT_DESCRIPTION",
+    )]
+    pub about_description: String,
+
+    /// The url used to direct users to the source code
+    #[arg(
+        short = None,
+        long = "source-code-url",
+        env = "SOURCE_CODE_URL",
+    )]
+    pub source_code_url: Url,
 }

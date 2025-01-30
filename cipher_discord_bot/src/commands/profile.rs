@@ -10,6 +10,7 @@ use crate::app::AppContext;
 use crate::app::AppError;
 use crate::utils;
 
+/// Edit and show profiles.
 #[poise::command(
     slash_command,
     subcommands(
@@ -37,6 +38,7 @@ struct EditProfileModal {
     switch_code: Option<String>,
 }
 
+/// Edit your profile.
 #[poise::command(slash_command)]
 pub async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::BackendError>) -> Result<(), AppError<R::BackendError>> {
     let mut repo = ctx.data.repository().await?;
@@ -218,10 +220,12 @@ fn parse_switch_code(code: &str) -> Option<String> {
     chars.next().is_none().then_some(parsed)
 }
 
+/// Show your profile or someone else's.
 #[poise::command(slash_command)]
 pub async fn show<R: RepositoryProvider + Send + Sync>(
     ctx: AppContext<'_, R, R::BackendError>,
     #[rename = "member"]
+    #[description = "The profile to show."]
     option_member: Option<serenity::all::Member>,
 ) -> Result<(), AppError<R::BackendError>> {
     let mut repo = ctx.data.repository().await?;

@@ -19,6 +19,7 @@ where
 
     let app_data = AppData {
         repository_provider,
+        qualified_command_names: commands::qualified_command_names(&commands),
     };
 
     let options = FrameworkOptions::<AppData<R>, AppError<R::BackendError>> {

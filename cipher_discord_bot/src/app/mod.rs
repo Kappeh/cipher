@@ -18,6 +18,7 @@ pub enum AppStartError {
 
 pub struct AppData<R> {
     repository_provider: R,
+    qualified_command_names: Vec<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -59,5 +60,11 @@ where
 {
     pub async fn repository(&self) -> Result<R::Repository<'_>, RepositoryError<R::BackendError>> {
         self.repository_provider.get().await
+    }
+}
+
+impl<R> AppData<R> {
+    pub fn qualified_command_names(&self) -> &[String] {
+        &self.qualified_command_names
     }
 }

@@ -1,13 +1,13 @@
 use futures::Stream;
 use cipher_core::repository::RepositoryProvider;
 use poise::CreateReply;
-use serenity::all::Color;
 use serenity::all::CreateEmbed;
 use serenity::futures::StreamExt;
 
 use crate::app::AppCommand;
 use crate::app::AppContext;
 use crate::app::AppError;
+use crate::utils;
 
 async fn autocomplete_command<'a, R> (
     ctx: AppContext<'a, R, R::BackendError>,
@@ -23,7 +23,7 @@ where
 
 /// Show help message.
 #[poise::command(slash_command)]
-pub async fn help<R: RepositoryProvider + Sync>(
+pub async fn help<R: RepositoryProvider + Send + Sync>(
     ctx: AppContext<'_, R, R::BackendError>,
     #[rename = "command"]
     #[description = "Command to get help for."]
@@ -41,15 +41,15 @@ pub async fn help<R: RepositoryProvider + Sync>(
         );
 
         if let Some((command, _, _)) = option_command {
-            command_help_embed(command, all.unwrap_or(false))
+            command_help_embed(&ctx, command, all.unwrap_or(false)).await
         } else {
             CreateEmbed::new()
                 .title("Help")
                 .description(format!("Could not find command `/{}`", query))
-                .color(Color::BLURPLE)
+                .color(utils::bot_color(&ctx).await)
         }
     } else {
-        root_help_embed(&ctx, all.unwrap_or(false))
+        root_help_embed(&ctx, all.unwrap_or(false)).await
     };
 
     let reply = CreateReply::default()
@@ -61,9 +61,9 @@ pub async fn help<R: RepositoryProvider + Sync>(
     Ok(())
 }
 
-fn root_help_embed<R>(ctx: &AppContext<'_, R, R::BackendError>, all: bool) -> CreateEmbed
+async fn root_help_embed<R>(ctx: &AppContext<'_, R, R::BackendError>, all: bool) -> CreateEmbed
 where
-    R: RepositoryProvider,
+    R: RepositoryProvider + Send + Sync,
 {
     let mut commands_field_value = String::new();
     for command in &ctx.framework().options.commands {
@@ -87,7 +87,7 @@ where
 
     let mut embed = CreateEmbed::new()
         .title("Help")
-        .color(Color::BLURPLE);
+        .color(utils::bot_color(&ctx).await);
 
     if !commands_field_value.is_empty() {
         embed = embed.field("Commands", commands_field_value, false);
@@ -98,9 +98,13 @@ where
     embed
 }
 
-fn command_help_embed<R>(command: &AppCommand<R, R::BackendError>, all: bool) -> CreateEmbed
+async fn command_help_embed<R>(
+    ctx: &AppContext<'_, R, R::BackendError>,
+    command: &AppCommand<R, R::BackendError>,
+    all: bool,
+) -> CreateEmbed
 where
-    R: RepositoryProvider,
+    R: RepositoryProvider + Send + Sync,
 {
     let mut required_parameters_field_value = String::new();
     let mut optional_parameters_field_value = String::new();
@@ -145,7 +149,7 @@ where
 
     let mut embed = CreateEmbed::new()
         .title(format!("Help `/{}`", command.qualified_name))
-        .color(Color::BLURPLE);
+        .color(utils::bot_color(ctx).await);
 
     if let Some(category) = &command.category {
         embed = embed.field("Category", category, false);

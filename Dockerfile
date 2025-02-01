@@ -19,4 +19,4 @@ RUN cargo build --release
 # COPY target/release/cipher_discord_bot /app/cipher_discord_bot
 
 # Run the application when the container starts
-CMD ./target/release/cipher_discord_bot start
+CMD ["./target/release/cipher_discord_bot", "start"]

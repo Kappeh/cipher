@@ -1,6 +1,13 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    staff_roles (id) {
+        id -> Int4,
+        discord_role_id -> Int8,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         discord_user_id -> Int8,
@@ -12,3 +19,8 @@ diesel::table! {
         switch_code -> Nullable<Varchar>,
     }
 }
+
+diesel::allow_tables_to_appear_in_same_query!(
+    staff_roles,
+    users,
+);

@@ -8,6 +8,7 @@ use cipher_core::repository::RepositoryProvider;
 
 use crate::BackendError;
 
+mod staff_role_repository;
 mod user_repository;
 
 pub struct SqliteRepository<'a> {

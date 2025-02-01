@@ -1,7 +1,9 @@
 use std::fmt::Display;
 
+use staff_role_repository::StaffRoleRepository;
 use user_repository::UserRepository;
 
+pub mod staff_role_repository;
 pub mod user_repository;
 
 #[async_trait::async_trait]
@@ -17,6 +19,7 @@ pub trait RepositoryProvider {
 
 pub trait Repository
 where
+    Self: StaffRoleRepository<BackendError = <Self as Repository>::BackendError>,
     Self: UserRepository<BackendError = <Self as Repository>::BackendError>,
 {
     type BackendError: std::error::Error;

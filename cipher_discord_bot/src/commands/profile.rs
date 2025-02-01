@@ -1,3 +1,4 @@
+use cipher_core::repository::staff_role_repository::StaffRoleRepository;
 use cipher_core::repository::user_repository::NewUser;
 use cipher_core::repository::user_repository::User;
 use cipher_core::repository::user_repository::UserRepository;
@@ -10,6 +11,7 @@ use serenity::all::CreateEmbed;
 use serenity::all::Member;
 
 use crate::app::AppContext;
+use crate::app::AppData;
 use crate::app::AppError;
 use crate::utils;
 
@@ -69,11 +71,27 @@ pub async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R:
     Ok(())
 }
 
+async fn is_staff<R>(ctx: poise::Context<'_, AppData<R>, AppError<R::BackendError>>) -> Result<bool, AppError<R::BackendError>>
+where
+    R: RepositoryProvider,
+{
+    let roles: Vec<_> = match ctx.author_member().await {
+        Some(member) => member.roles.iter().map(|r| r.get()).collect(),
+        None => return Ok(false),
+    };
+
+    match ctx.data().repository().await?.staff_roles_contains(&roles).await {
+        Ok(true) => Ok(true),
+        Ok(false) => Err(AppError::StaffOnly { command_name: ctx.command().qualified_name.clone() }),
+        Err(err) => Err(AppError::from(err)),
+    }
+}
+
 /// Edit any user's profile.
 #[poise::command(
     slash_command,
     hide_in_help,
-    owners_only,
+    check = "is_staff",
 )]
 pub async fn overwrite<R: RepositoryProvider + Send + Sync>(
     ctx: AppContext<'_, R, R::BackendError>,

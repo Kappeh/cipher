@@ -29,6 +29,8 @@ pub enum AppError<E> {
     SerenityError(#[from] serenity::Error),
     #[error(transparent)]
     RepositoryError(#[from] RepositoryError<E>),
+    #[error("staff-only command used by non-staff user")]
+    StaffOnly { command_name: String },
 }
 
 pub type AppContext<'a, R, E> = poise::ApplicationContext<'a, AppData<R>, AppError<E>>;

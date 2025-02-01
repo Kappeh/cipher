@@ -158,7 +158,7 @@ where
                 format!("nsfw-only command `{}` cannot be run in non-nsfw channels", ctx.command().qualified_name),
                 log::Level::Info,
             ),
-            F::CommandCheckFailed { error, ctx, .. } => error.map(Into::into).unwrap_or_else(|| ErrorMessage::new(
+            F::CommandCheckFailed { error, ctx, .. } => error.map(|err| err.into()).unwrap_or_else(|| ErrorMessage::new(
                 "Command Check Failed",
                 "A pre-command check failed without a reason. Please contact a bot administrator to review the logs for further details.",
                 format!("pre-command check for command `{}` either denied access or errored without a reason", ctx.command().qualified_name),
@@ -293,6 +293,13 @@ where
                 format!("repository backend error: {}", error),
                 log::Level::Error,
             ),
+
+            A::StaffOnly { command_name } => ErrorMessage::new(
+                "Staff Only Command",
+                format!("`/{}` can only be used by staff.", command_name),
+                format!("staff-only command `{}` cannot be run by non-staff users", command_name),
+                log::Level::Info,
+            )
         }
     }
 }

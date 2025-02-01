@@ -32,9 +32,8 @@ where
     R: RepositoryProvider,
 {
     for command in commands {
-        if command.subcommands.is_empty() {
-            names.push(format!("{}{}", prefix, command.qualified_name.clone()));
-        } else {
+        names.push(format!("{}{}", prefix, command.qualified_name.clone()));
+        if !command.subcommands.is_empty() {
             let old_len = prefix.len();
             prefix.push_str(&command.qualified_name);
             prefix.push(' ');

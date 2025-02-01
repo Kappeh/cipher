@@ -1,10 +1,13 @@
 use cipher_core::repository::user_repository::NewUser;
+use cipher_core::repository::user_repository::User;
 use cipher_core::repository::user_repository::UserRepository;
+use cipher_core::repository::RepositoryError;
 use cipher_core::repository::RepositoryProvider;
 use poise::CreateReply;
 use poise::Modal;
 use serenity::all::Color;
 use serenity::all::CreateEmbed;
+use serenity::all::Member;
 
 use crate::app::AppContext;
 use crate::app::AppError;
@@ -15,6 +18,7 @@ use crate::utils;
     slash_command,
     subcommands(
         "edit",
+        "overwrite",
         "show",
     ),
 )]
@@ -25,7 +29,7 @@ pub async fn profile<R: RepositoryProvider + Send + Sync>(
 }
 
 #[derive(Debug, poise::Modal)]
-#[name = "Edit Your Profile"]
+#[name = "Edit Profile Profile"]
 struct EditProfileModal {
     #[name = "Pokémon Go Friend Code"]
     #[placeholder = "0000 0000 0000"]
@@ -41,62 +45,19 @@ struct EditProfileModal {
 /// Edit your profile.
 #[poise::command(slash_command)]
 pub async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::BackendError>) -> Result<(), AppError<R::BackendError>> {
-    let mut repo = ctx.data.repository().await?;
     let author_id = ctx.author().id.get();
 
-    let errors;
-
-    if let Some(mut user) = repo.user_by_discord_user_id(author_id).await? {
-        let defaults = EditProfileModal {
-            pokemon_go_code: user.pokemon_go_code.clone(),
-            pokemon_pocket_code: user.pokemon_pocket_code.clone(),
-            switch_code: user.switch_code.clone(),
-        };
-
-        let mut data = match EditProfileModal::execute_with_defaults(ctx, defaults).await? {
-            Some(data) => data,
-            None => return Ok(()),
-        };
-
-        errors = data.validate();
-
-        if errors.is_empty() {
-            user.pokemon_go_code = data.pokemon_go_code;
-            user.pokemon_pocket_code = data.pokemon_pocket_code;
-            user.switch_code = data.switch_code;
-
-            repo.update_user(user).await?;
-        }
-    } else {
-        let mut data = match EditProfileModal::execute(ctx).await? {
-            Some(data) => data,
-            None => return Ok(()),
-        };
-
-        errors = data.validate();
-
-        if errors.is_empty() {
-            let new_user = NewUser {
-                discord_user_id: author_id,
-                pokemon_go_code: data.pokemon_go_code,
-                pokemon_pocket_code: data.pokemon_pocket_code,
-                switch_code: data.switch_code,
-            };
-
-            repo.insert_user(new_user).await?;
-        }
-    }
-
-    let embed = if errors.is_empty() {
-        CreateEmbed::new()
+    let embed = match edit_user(ctx, author_id).await {
+        Ok(()) => CreateEmbed::new()
             .title("Changes Saved")
             .description("Your changes have been saved successfully.")
-            .color(utils::bot_color(&ctx).await)
-    } else {
-        CreateEmbed::new()
+            .color(utils::bot_color(&ctx).await),
+        Err(EditError::ValidationError(errors)) => CreateEmbed::new()
             .title("Validation Error")
             .description(errors.join("\n"))
-            .color(Color::RED)
+            .color(Color::RED),
+        Err(EditError::SerenityError(err)) => return Err(AppError::from(err)),
+        Err(EditError::RepositoryError(err)) => return Err(AppError::from(err)),
     };
 
     let reply = CreateReply::default()
@@ -108,8 +69,106 @@ pub async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R:
     Ok(())
 }
 
+/// Edit any user's profile.
+#[poise::command(
+    slash_command,
+    hide_in_help,
+    owners_only,
+)]
+pub async fn overwrite<R: RepositoryProvider + Send + Sync>(
+    ctx: AppContext<'_, R, R::BackendError>,
+    #[description = "The profile to edit."]
+    member: Member,
+) -> Result<(), AppError<R::BackendError>> {
+    let member_id = member.user.id.get();
+
+    let embed = match edit_user(ctx, member_id).await {
+        Ok(()) => CreateEmbed::new()
+            .title("Changes Saved")
+            .description("Your changes have been saved successfully.")
+            .color(utils::bot_color(&ctx).await),
+        Err(EditError::ValidationError(errors)) => CreateEmbed::new()
+            .title("Validation Error")
+            .description(errors.join("\n"))
+            .color(Color::RED),
+        Err(EditError::SerenityError(err)) => return Err(AppError::from(err)),
+        Err(EditError::RepositoryError(err)) => return Err(AppError::from(err)),
+    };
+
+    let reply = CreateReply::default()
+        .embed(embed)
+        .ephemeral(true);
+
+    ctx.send(reply).await?;
+
+    Ok(())
+}
+
+#[derive(Debug, thiserror::Error)]
+enum EditError<E> {
+    #[error(transparent)]
+    SerenityError(#[from] serenity::Error),
+    #[error(transparent)]
+    RepositoryError(#[from] RepositoryError<E>),
+    #[error("Validation error")]
+    ValidationError(Vec<String>),
+}
+
+async fn edit_user<R>(
+    ctx: AppContext<'_, R, R::BackendError>,
+    discord_user_id: u64,
+) -> Result<(), EditError<R::BackendError>>
+where
+    R: RepositoryProvider + Send + Sync,
+{
+    let mut repo = ctx.data.repository().await?;
+
+    if let Some(mut user) = repo.user_by_discord_user_id(discord_user_id).await? {
+        let defaults = EditProfileModal {
+            pokemon_go_code: user.pokemon_go_code.clone(),
+            pokemon_pocket_code: user.pokemon_pocket_code.clone(),
+            switch_code: user.switch_code.clone(),
+        };
+
+        let mut data = match EditProfileModal::execute_with_defaults(ctx, defaults).await? {
+            Some(data) => data,
+            None => return Ok(()),
+        };
+
+        data.validate().map_err(EditError::ValidationError)?;
+
+        user = User {
+            id: user.id,
+            discord_user_id: user.discord_user_id,
+            pokemon_go_code: data.pokemon_go_code,
+            pokemon_pocket_code: data.pokemon_pocket_code,
+            switch_code: data.switch_code,
+        };
+
+        repo.update_user(user).await?;
+    } else {
+        let mut data = match EditProfileModal::execute(ctx).await? {
+            Some(data) => data,
+            None => return Ok(()),
+        };
+
+        data.validate().map_err(EditError::ValidationError)?;
+
+        let new_user = NewUser {
+            discord_user_id,
+            pokemon_go_code: data.pokemon_go_code,
+            pokemon_pocket_code: data.pokemon_pocket_code,
+            switch_code: data.switch_code,
+        };
+
+        repo.insert_user(new_user).await?;
+    }
+
+    Ok(())
+}
+
 impl EditProfileModal {
-    fn validate(&mut self) -> Vec<String> {
+    fn validate(&mut self) -> Result<(), Vec<String>> {
         let mut errors = Vec::new();
 
         if let Some(code) = &self.pokemon_go_code {
@@ -133,7 +192,11 @@ impl EditProfileModal {
             };
         }
 
-        return errors;
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 }
 

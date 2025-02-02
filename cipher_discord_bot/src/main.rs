@@ -1,4 +1,5 @@
 mod app;
+mod checks;
 mod cli;
 mod commands;
 mod utils;

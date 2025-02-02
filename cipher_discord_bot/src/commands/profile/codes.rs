@@ -15,6 +15,7 @@ use crate::app::AppError;
 /// Manage friend codes.
 #[poise::command(
     slash_command,
+    guild_only,
     subcommands(
         "edit",
         "overwrite",
@@ -220,7 +221,7 @@ where
 }
 
 /// Edit your friend codes.
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only)]
 async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::BackendError>) -> Result<(), AppError<R::BackendError>> {
     let author_id = ctx.author().id.get();
 
@@ -249,6 +250,7 @@ async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::Bac
 /// Edit any user's friend codes.
 #[poise::command(
     slash_command,
+    guild_only,
     hide_in_help,
     check = "crate::checks::is_staff",
 )]

@@ -31,6 +31,8 @@ pub enum AppError<E> {
     RepositoryError(#[from] RepositoryError<E>),
     #[error("staff-only command used by non-staff user")]
     StaffOnly { command_name: String },
+    #[error("unknown cache or http error")]
+    UnknownCacheOrHttpError,
 }
 
 pub type AppContext<'a, R, E> = poise::ApplicationContext<'a, AppData<R>, AppError<E>>;

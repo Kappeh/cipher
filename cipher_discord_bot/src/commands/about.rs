@@ -7,7 +7,7 @@ use crate::app::AppError;
 use crate::utils;
 
 /// Show information about the bot.
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only)]
 pub async fn about<R: RepositoryProvider + Send + Sync>(
     ctx: AppContext<'_, R, R::BackendError>,
     #[description = "Hide reply from other users. Defaults to True."] ephemeral: Option<bool>,

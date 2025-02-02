@@ -1,7 +1,6 @@
 use cipher_core::repository::user_repository::UserRepository;
 use cipher_core::repository::RepositoryProvider;
 use poise::CreateReply;
-use serenity::all::Color;
 use serenity::all::CreateEmbed;
 
 use crate::app::AppContext;
@@ -24,7 +23,7 @@ pub async fn profile<R: RepositoryProvider + Send + Sync>(
 }
 
 /// Show your profile or someone else's.
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only)]
 async fn show<R: RepositoryProvider + Send + Sync>(
     ctx: AppContext<'_, R, R::BackendError>,
     #[rename = "member"]
@@ -37,23 +36,7 @@ async fn show<R: RepositoryProvider + Send + Sync>(
 
     let member = match option_member {
         Some(member) => member,
-        None => match ctx.author_member().await {
-            Some(member) => member.into_owned(),
-            None => {
-                let embed = CreateEmbed::new()
-                    .title("Error")
-                    .description("This command can only be used in server.")
-                    .color(Color::RED);
-
-                let reply = CreateReply::default()
-                    .embed(embed)
-                    .ephemeral(true);
-
-                ctx.send(reply).await?;
-
-                return Ok(())
-            },
-        },
+        None => ctx.author_member().await.ok_or(AppError::UnknownCacheOrHttpError)?.into_owned(),
     };
 
     let avatar_url = crate::utils::member_avatar_url(&member);

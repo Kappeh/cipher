@@ -22,7 +22,7 @@ where
 }
 
 /// Show help message.
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only)]
 pub async fn help<R: RepositoryProvider + Send + Sync>(
     ctx: AppContext<'_, R, R::BackendError>,
     #[rename = "command"]

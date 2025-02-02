@@ -299,6 +299,12 @@ where
                 format!("`/{}` can only be used by staff.", command_name),
                 format!("staff-only command `{}` cannot be run by non-staff users", command_name),
                 log::Level::Info,
+            ),
+            A::UnknownCacheOrHttpError => ErrorMessage::new(
+                "Unknown Cache or Http Error",
+                "Failed to get resource.",
+                "cache lookup or http request failed",
+                log::Level::Warn,
             )
         }
     }

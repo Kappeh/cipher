@@ -1,13 +1,11 @@
 use cipher_core::repository::RepositoryProvider;
-use serenity::all::{Color, GuildId};
+use serenity::all::Color;
+use serenity::all::GuildId;
+use serenity::all::Member;
 
 use crate::app::{AppCommand, AppContext, AppError};
 
-pub async fn register_in_guilds<R>(
-    serenity_ctx: &serenity::client::Context,
-    commands: &[AppCommand<R, R::BackendError>],
-    guilds: &[GuildId],
-)
+pub async fn register_in_guilds<R>(serenity_ctx: &serenity::client::Context, commands: &[AppCommand<R, R::BackendError>], guilds: &[GuildId])
 where
     R: RepositoryProvider,
 {
@@ -34,7 +32,9 @@ where
     member.and_then(|m| m.colour(ctx)).unwrap_or(Color::BLURPLE)
 }
 
-pub async fn bot_avatar_url<R>(ctx: &AppContext<'_, R, R::BackendError>) -> Result<String, AppError<R::BackendError>>
+pub async fn bot_avatar_url<R>(
+    ctx: &AppContext<'_, R, R::BackendError>,
+) -> Result<String, AppError<R::BackendError>>
 where
     R: RepositoryProvider + Send + Sync,
 {
@@ -50,8 +50,16 @@ where
             user.avatar_url()
                 .or_else(|| user.static_avatar_url())
                 .unwrap_or_else(|| user.default_avatar_url())
-        },
+        }
     };
 
     Ok(avatar_url)
+}
+
+pub fn member_avatar_url(member: &Member) -> String {
+    member
+        .avatar_url()
+        .or_else(|| member.user.avatar_url())
+        .or_else(|| member.user.static_avatar_url())
+        .unwrap_or_else(|| member.user.default_avatar_url())
 }

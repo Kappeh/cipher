@@ -6,7 +6,6 @@ use serenity::all::CreateEmbed;
 
 use crate::app::AppContext;
 use crate::app::AppError;
-use crate::utils;
 
 mod codes;
 
@@ -57,14 +56,11 @@ async fn show<R: RepositoryProvider + Send + Sync>(
         },
     };
 
-    let avatar_url = member.avatar_url()
-        .or_else(|| member.user.avatar_url())
-        .or_else(|| member.user.static_avatar_url())
-        .unwrap_or_else(|| member.user.default_avatar_url());
+    let avatar_url = crate::utils::member_avatar_url(&member);
 
     let embed_color = match member.colour(ctx) {
         Some(color) => color,
-        None => utils::bot_color(&ctx).await,
+        None => crate::utils::bot_color(&ctx).await,
     };
 
     let mut embed = CreateEmbed::new()

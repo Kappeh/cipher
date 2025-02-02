@@ -31,6 +31,8 @@ async fn show<R: RepositoryProvider + Send + Sync>(
     #[rename = "member"]
     #[description = "The profile to show."]
     option_member: Option<serenity::all::Member>,
+    #[description = "Hide reply from other users. Defaults to True."]
+    ephemeral: Option<bool>,
 ) -> Result<(), AppError<R::BackendError>> {
     let mut repo = ctx.data.repository().await?;
 
@@ -95,7 +97,7 @@ async fn show<R: RepositoryProvider + Send + Sync>(
 
     let reply = CreateReply::default()
         .embed(embed)
-        .ephemeral(true);
+        .ephemeral(ephemeral.unwrap_or(true));
 
     ctx.send(reply).await?;
 

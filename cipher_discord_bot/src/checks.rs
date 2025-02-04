@@ -10,7 +10,7 @@ where
 {
     let roles: Vec<_> = match ctx.author_member().await {
         Some(member) => member.roles.iter().map(|r| r.get()).collect(),
-        None => return Ok(false),
+        None => return Err(AppError::StaffOnly { command_name: ctx.command().qualified_name.clone() }),
     };
 
     match ctx.data().repository().await?.staff_roles_contains(&roles).await {

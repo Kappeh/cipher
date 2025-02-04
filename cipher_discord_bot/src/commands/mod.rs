@@ -16,6 +16,8 @@ where
         help::help(),
         pokeapi::pokeapi(),
         profile::profile(),
+        profile::cmu_profile_show(),
+        profile::cmu_profile_edit(),
     ]
 }
 
@@ -34,7 +36,13 @@ where
     R: RepositoryProvider,
 {
     for command in commands {
+        if command.slash_action.is_none() {
+            // Skip context-menu-only commands
+            continue;
+        }
+
         names.push(format!("{}{}", prefix, command.qualified_name.clone()));
+
         if !command.subcommands.is_empty() {
             let old_len = prefix.len();
             prefix.push_str(&command.qualified_name);

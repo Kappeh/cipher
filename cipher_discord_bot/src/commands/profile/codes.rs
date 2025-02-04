@@ -220,12 +220,11 @@ where
     Ok(())
 }
 
-/// Edit your friend codes.
-#[poise::command(slash_command, guild_only)]
-async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::BackendError>) -> Result<(), AppError<R::BackendError>> {
-    let author_id = ctx.author().id.get();
-
-    let embed = match execute_edit_codes_modal(ctx, author_id).await {
+async fn edit_inner<R: RepositoryProvider + Send + Sync>(
+    ctx: AppContext<'_, R, R::BackendError>,
+    user: &serenity::all::User,
+) -> Result<(), AppError<R::BackendError>> {
+    let embed = match execute_edit_codes_modal(ctx, user.id.get()).await {
         Ok(()) => CreateEmbed::new()
             .title("Changes Saved")
             .description("Your changes have been saved successfully.")
@@ -247,6 +246,24 @@ async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::Bac
     Ok(())
 }
 
+#[poise::command(context_menu_command = "Edit Friend Codes", guild_only)]
+pub async fn cmu_profile_edit<R: RepositoryProvider + Send + Sync>(
+    ctx: AppContext<'_, R, R::BackendError>,
+    user: serenity::all::User,
+) -> Result<(), AppError<R::BackendError>> {
+    if ctx.author().id != user.id && !crate::checks::is_staff(ctx.into()).await? {
+        return Err(AppError::StaffOnly { command_name: ctx.command().qualified_name.clone() });
+    }
+
+    edit_inner(ctx, &user).await
+}
+
+/// Edit your friend codes.
+#[poise::command(slash_command, guild_only)]
+async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::BackendError>) -> Result<(), AppError<R::BackendError>> {
+    edit_inner(ctx, ctx.author()).await
+}
+
 /// Edit any user's friend codes.
 #[poise::command(
     slash_command,
@@ -259,26 +276,5 @@ async fn overwrite<R: RepositoryProvider + Send + Sync>(
     #[description = "The profile to edit."]
     member: Member,
 ) -> Result<(), AppError<R::BackendError>> {
-    let member_id = member.user.id.get();
-
-    let embed = match execute_edit_codes_modal(ctx, member_id).await {
-        Ok(()) => CreateEmbed::new()
-            .title("Changes Saved")
-            .description("Your changes have been saved successfully.")
-            .color(crate::utils::bot_color(&ctx).await),
-        Err(EditError::ValidationError(errors)) => CreateEmbed::new()
-            .title("Validation Error")
-            .description(errors.join("\n"))
-            .color(Color::RED),
-        Err(EditError::SerenityError(err)) => return Err(AppError::from(err)),
-        Err(EditError::RepositoryError(err)) => return Err(AppError::from(err)),
-    };
-
-    let reply = CreateReply::default()
-        .embed(embed)
-        .ephemeral(true);
-
-    ctx.send(reply).await?;
-
-    Ok(())
+    edit_inner(ctx, &member.user).await
 }

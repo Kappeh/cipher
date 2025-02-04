@@ -29,6 +29,8 @@ pub enum AppError<E> {
     SerenityError(#[from] serenity::Error),
     #[error(transparent)]
     RepositoryError(#[from] RepositoryError<E>),
+    #[error(transparent)]
+    RustemonError(#[from] rustemon::error::Error),
     #[error("staff-only command used by non-staff user")]
     StaffOnly { command_name: String },
     #[error("unknown cache or http error")]

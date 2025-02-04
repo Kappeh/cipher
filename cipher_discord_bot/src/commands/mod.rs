@@ -4,6 +4,7 @@ use crate::app::AppCommand;
 
 mod about;
 mod help;
+mod pokeapi;
 mod profile;
 
 pub fn commands<R>() -> Vec<AppCommand<R, R::BackendError>>
@@ -13,6 +14,7 @@ where
     vec![
         about::about(),
         help::help(),
+        pokeapi::pokeapi(),
         profile::profile(),
     ]
 }

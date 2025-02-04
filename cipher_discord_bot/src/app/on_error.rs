@@ -294,6 +294,13 @@ where
                 log::Level::Error,
             ),
 
+            A::RustemonError(error) => ErrorMessage::new(
+                "PokéAPI Error",
+                "Failed to get resource from Pokémon.",
+                format!("failed to get resource from PokéAPI: {}", error),
+                log::Level::Warn,
+            ),
+
             A::StaffOnly { command_name } => ErrorMessage::new(
                 "Staff Only Command",
                 format!("`/{}` can only be used by staff.", command_name),

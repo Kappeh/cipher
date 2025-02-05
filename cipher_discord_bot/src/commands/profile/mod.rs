@@ -9,6 +9,7 @@ use crate::app::AppContext;
 use crate::app::AppError;
 
 mod codes;
+mod edit;
 
 pub use codes::cmu_profile_edit;
 
@@ -18,6 +19,7 @@ pub use codes::cmu_profile_edit;
     subcommands(
         "codes::codes",
         "show",
+        "edit::edit",
     ),
 )]
 pub async fn profile<R: RepositoryProvider + Send + Sync>(

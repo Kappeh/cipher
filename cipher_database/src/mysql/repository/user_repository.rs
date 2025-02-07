@@ -86,44 +86,15 @@ impl UserRepository for MysqlRepository<'_> {
             .map(|option| option.map(User::from))
             .map_err(|err| RepositoryError(BackendError::from(err)))
     }
-
-    async fn remove_user(&mut self, id: i32) -> Result<Option<User>, RepositoryError<Self::BackendError>> {
-        self.conn
-            .transaction::<_, diesel::result::Error, _>(move |conn| async move {
-                let option_removed = users::dsl::users.find(id)
-                    .select(ModelUser::as_select())
-                    .first(conn)
-                    .await
-                    .optional()?;
-
-                let removed = match option_removed {
-                    Some(previous) => previous,
-                    None => return Ok(None),
-                };
-
-                diesel::delete(users::dsl::users.find(id))
-                    .execute(conn)
-                    .await?;
-
-                Ok(Some(removed))
-
-            }.scope_boxed())
-            .await
-            .map(|option| option.map(User::from))
-            .map_err(|err| RepositoryError(BackendError::from(err)))
-    }
 }
 
 #[derive(Queryable, Selectable, AsChangeset)]
 #[diesel(table_name = users)]
 #[diesel(treat_none_as_null = true)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
-struct ModelUser {
+pub struct ModelUser {
     id: i32,
     discord_user_id: i64,
-    pokemon_go_code: Option<String>,
-    pokemon_pocket_code: Option<String>,
-    switch_code: Option<String>,
 }
 
 impl From<ModelUser> for User {
@@ -131,9 +102,6 @@ impl From<ModelUser> for User {
         Self {
             id: value.id,
             discord_user_id: value.discord_user_id as u64,
-            pokemon_go_code: value.pokemon_go_code,
-            pokemon_pocket_code: value.pokemon_pocket_code,
-            switch_code: value.switch_code,
         }
     }
 }
@@ -143,9 +111,6 @@ impl From<User> for ModelUser {
         Self {
             id: value.id,
             discord_user_id: value.discord_user_id as i64,
-            pokemon_go_code: value.pokemon_go_code,
-            pokemon_pocket_code: value.pokemon_pocket_code,
-            switch_code: value.switch_code,
         }
     }
 }
@@ -154,20 +119,14 @@ impl From<User> for ModelUser {
 #[diesel(table_name = users)]
 #[diesel(treat_none_as_null = true)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
-struct ModelNewUser {
+pub struct ModelNewUser {
     discord_user_id: i64,
-    pokemon_go_code: Option<String>,
-    pokemon_pocket_code: Option<String>,
-    switch_code: Option<String>,
 }
 
 impl From<NewUser> for ModelNewUser {
     fn from(value: NewUser) -> Self {
         Self {
             discord_user_id: value.discord_user_id as i64,
-            pokemon_go_code: value.pokemon_go_code,
-            pokemon_pocket_code: value.pokemon_pocket_code,
-            switch_code: value.switch_code,
         }
     }
 }

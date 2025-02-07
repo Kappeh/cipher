@@ -5,11 +5,12 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.85"
-diesel = { version = "2.2.6", default-features = false }
+diesel = { version = "2.2.6", default-features = false, features = ["chrono"] }
 diesel-async = { version = "0.5.2", features = ["bb8"] }
 diesel_migrations = "2.2.0"
 cipher_core = { path = "../cipher_core" }
 thiserror = "2.0.11"
+chrono = "0.4.39"
 
 [features]
 default = ["mysql", "postgres", "sqlite"]

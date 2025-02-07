@@ -81,20 +81,6 @@ impl UserRepository for SqliteRepository<'_> {
             .map(|option| option.map(User::from))
             .map_err(|err| RepositoryError(BackendError::from(err)))
     }
-
-    async fn remove_user(&mut self, id: i32) -> Result<Option<User>, RepositoryError<Self::BackendError>> {
-        self.conn
-            .transaction::<_, diesel::result::Error, _>(move |conn| async move {
-                diesel::delete(users::dsl::users.find(id))
-                    .returning(ModelUser::as_returning())
-                    .get_result(conn)
-                    .await
-                    .optional()
-            }.scope_boxed())
-            .await
-            .map(|option| option.map(User::from))
-            .map_err(|err| RepositoryError(BackendError::from(err)))
-    }
 }
 
 #[derive(Queryable, Selectable, AsChangeset)]
@@ -104,9 +90,6 @@ impl UserRepository for SqliteRepository<'_> {
 struct ModelUser {
     id: i32,
     discord_user_id: i64,
-    pokemon_go_code: Option<String>,
-    pokemon_pocket_code: Option<String>,
-    switch_code: Option<String>,
 }
 
 impl From<ModelUser> for User {
@@ -114,9 +97,6 @@ impl From<ModelUser> for User {
         Self {
             id: value.id,
             discord_user_id: value.discord_user_id as u64,
-            pokemon_go_code: value.pokemon_go_code,
-            pokemon_pocket_code: value.pokemon_pocket_code,
-            switch_code: value.switch_code,
         }
     }
 }
@@ -126,9 +106,6 @@ impl From<User> for ModelUser {
         Self {
             id: value.id,
             discord_user_id: value.discord_user_id as i64,
-            pokemon_go_code: value.pokemon_go_code,
-            pokemon_pocket_code: value.pokemon_pocket_code,
-            switch_code: value.switch_code,
         }
     }
 }
@@ -139,18 +116,12 @@ impl From<User> for ModelUser {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 struct ModelNewUser {
     discord_user_id: i64,
-    pokemon_go_code: Option<String>,
-    pokemon_pocket_code: Option<String>,
-    switch_code: Option<String>,
 }
 
 impl From<NewUser> for ModelNewUser {
     fn from(value: NewUser) -> Self {
         Self {
             discord_user_id: value.discord_user_id as i64,
-            pokemon_go_code: value.pokemon_go_code,
-            pokemon_pocket_code: value.pokemon_pocket_code,
-            switch_code: value.switch_code,
         }
     }
 }

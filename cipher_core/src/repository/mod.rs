@@ -1,8 +1,10 @@
 use std::fmt::Display;
 
+use profile_repository::ProfileRepository;
 use staff_role_repository::StaffRoleRepository;
 use user_repository::UserRepository;
 
+pub mod profile_repository;
 pub mod staff_role_repository;
 pub mod user_repository;
 
@@ -19,6 +21,7 @@ pub trait RepositoryProvider {
 
 pub trait Repository
 where
+    Self: ProfileRepository<BackendError = <Self as Repository>::BackendError>,
     Self: StaffRoleRepository<BackendError = <Self as Repository>::BackendError>,
     Self: UserRepository<BackendError = <Self as Repository>::BackendError>,
 {

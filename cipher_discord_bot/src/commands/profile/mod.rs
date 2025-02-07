@@ -1,4 +1,4 @@
-use cipher_core::repository::user_repository::UserRepository;
+use cipher_core::repository::profile_repository::ProfileRepository;
 use cipher_core::repository::RepositoryProvider;
 use poise::CreateReply;
 use serenity::all::CreateEmbed;
@@ -66,8 +66,6 @@ async fn show_inner<R: RepositoryProvider + Send + Sync>(
     member: Member,
     ephemeral: bool,
 ) -> Result<(), AppError<R::BackendError>> {
-    let mut repo = ctx.data.repository().await?;
-
     let avatar_url = crate::utils::member_avatar_url(&member);
 
     let embed_color = match member.colour(ctx) {
@@ -82,18 +80,19 @@ async fn show_inner<R: RepositoryProvider + Send + Sync>(
 
     let mut is_profile_empty = true;
 
-    if let Some(user_info) = repo.user_by_discord_user_id(member.user.id.get()).await? {
-        if let Some(code) = user_info.pokemon_go_code {
+    let mut repo = ctx.data.repository().await?;
+    if let Some(profile) = repo.active_profile_by_discord_id(member.user.id.get()).await? {
+        if let Some(code) = profile.pokemon_go_code {
             embed = embed.field("Pokémon Go Friend Code", code, false);
             is_profile_empty = false;
         }
 
-        if let Some(code) = user_info.pokemon_pocket_code {
+        if let Some(code) = profile.pokemon_pocket_code {
             embed = embed.field("Pokémon TCG Pocket Friend Code", code, false);
             is_profile_empty = false;
         }
 
-        if let Some(code) = user_info.switch_code {
+        if let Some(code) = profile.switch_code {
             embed = embed.field("Nintendo Switch Friend Code", code, false);
             is_profile_empty = false;
         }

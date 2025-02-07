@@ -1,5 +1,6 @@
+use cipher_core::repository::profile_repository::NewProfile;
+use cipher_core::repository::profile_repository::ProfileRepository;
 use cipher_core::repository::user_repository::NewUser;
-use cipher_core::repository::user_repository::User;
 use cipher_core::repository::user_repository::UserRepository;
 use cipher_core::repository::RepositoryError;
 use cipher_core::repository::RepositoryProvider;
@@ -176,11 +177,16 @@ where
 {
     let mut repo = ctx.data.repository().await?;
 
-    if let Some(mut user) = repo.user_by_discord_user_id(discord_user_id).await? {
+    let user = match repo.user_by_discord_user_id(discord_user_id).await? {
+        Some(user) => user,
+        None => repo.insert_user(NewUser { discord_user_id }).await?,
+    };
+
+    if let Some(mut profile) = repo.active_profile_by_discord_id(discord_user_id).await? {
         let defaults = EditCodesModal {
-            pokemon_go_code: user.pokemon_go_code.clone(),
-            pokemon_pocket_code: user.pokemon_pocket_code.clone(),
-            switch_code: user.switch_code.clone(),
+            pokemon_go_code: profile.pokemon_go_code.clone(),
+            pokemon_pocket_code: profile.pokemon_pocket_code.clone(),
+            switch_code: profile.switch_code.clone(),
         };
 
         let mut data = match EditCodesModal::execute_with_defaults(ctx, defaults).await? {
@@ -190,15 +196,11 @@ where
 
         data.validate().map_err(EditError::ValidationError)?;
 
-        user = User {
-            id: user.id,
-            discord_user_id: user.discord_user_id,
-            pokemon_go_code: data.pokemon_go_code,
-            pokemon_pocket_code: data.pokemon_pocket_code,
-            switch_code: data.switch_code,
-        };
+        profile.pokemon_go_code = data.pokemon_go_code;
+        profile.pokemon_pocket_code = data.pokemon_pocket_code;
+        profile.switch_code = data.switch_code;
 
-        repo.update_user(user).await?;
+        repo.insert_profile(profile.into_new()).await?;
     } else {
         let mut data = match EditCodesModal::execute(ctx).await? {
             Some(data) => data,
@@ -207,14 +209,26 @@ where
 
         data.validate().map_err(EditError::ValidationError)?;
 
-        let new_user = NewUser {
-            discord_user_id,
+        let new_profile = NewProfile {
+            user_id: user.id,
+
+            thumbnail_url: None,
+            image_url: None,
+
+            trainer_class: None,
+            nature: None,
+            partner_pokemon: None,
+            starting_region: None,
+            favourite_food: None,
+            likes: None,
+            quotes: None,
+
             pokemon_go_code: data.pokemon_go_code,
             pokemon_pocket_code: data.pokemon_pocket_code,
             switch_code: data.switch_code,
         };
 
-        repo.insert_user(new_user).await?;
+        repo.insert_profile(new_profile).await?;
     }
 
     Ok(())

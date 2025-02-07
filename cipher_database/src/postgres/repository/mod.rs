@@ -7,6 +7,7 @@ use cipher_core::repository::RepositoryProvider;
 
 use crate::BackendError;
 
+mod profile_repository;
 mod staff_role_repository;
 mod user_repository;
 

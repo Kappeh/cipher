@@ -91,7 +91,7 @@ impl StaffRoleRepository for MysqlRepository<'_> {
 #[diesel(table_name = staff_roles)]
 #[diesel(treat_none_as_null = true)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
-struct ModelStaffRole {
+pub struct ModelStaffRole {
     #[allow(unused)]
     id: i32,
     discord_role_id: i64,
@@ -101,6 +101,6 @@ struct ModelStaffRole {
 #[diesel(table_name = staff_roles)]
 #[diesel(treat_none_as_null = true)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
-struct ModelNewStaffRole {
+pub struct ModelNewStaffRole {
     discord_role_id: i64,
 }

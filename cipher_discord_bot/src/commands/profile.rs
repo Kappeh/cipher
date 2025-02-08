@@ -77,6 +77,7 @@ async fn show<R: RepositoryProvider + Send + Sync>(
     show_inner(ctx, member, ephemeral.unwrap_or(true)).await
 }
 
+/// Edit your profile.
 #[poise::command(
     slash_command,
     guild_only,
@@ -105,7 +106,7 @@ async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::Bac
     Ok(())
 }
 
-
+/// Edit any user's profile. Staff only.
 #[poise::command(
     slash_command,
     guild_only,
@@ -114,7 +115,7 @@ async fn edit<R: RepositoryProvider + Send + Sync>(ctx: AppContext<'_, R, R::Bac
 )]
 async fn overwrite<R: RepositoryProvider + Send + Sync>(
     ctx: AppContext<'_, R, R::BackendError>,
-    member: Member,
+    #[description = "The profile you wish to edit."] member: Member,
 ) -> Result<(), AppError<R::BackendError>> {
     edit_inner(ctx, member).await?;
 

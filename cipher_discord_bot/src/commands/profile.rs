@@ -527,7 +527,7 @@ impl ProfileEmbed {
             is_profile_empty = false;
         }
         if let Some(partner_pokemon) = self.partner_pokemon {
-            embed = embed.field("Partner Pokémon", partner_pokemon, true);
+            embed = embed.field("Pokémon", partner_pokemon, true);
             is_profile_empty = false;
         }
         if let Some(favourite_food) = self.favourite_food {
@@ -535,7 +535,7 @@ impl ProfileEmbed {
             is_profile_empty = false;
         }
         if let Some(starting_region) = self.starting_region {
-            embed = embed.field("Starting Region", starting_region, true);
+            embed = embed.field("Region", starting_region, true);
             is_profile_empty = false;
         }
         if let Some(likes) = self.likes {
@@ -578,18 +578,20 @@ impl ProfileEmbed {
 }
 
 #[derive(Debug, Clone, Default, poise::Modal)]
+#[name = "Edit Pokémon Information"]
 struct EditPokemonInfoModal {
     #[name = "Trainer Class"]
     trainer_class: Option<String>,
     #[name = "Nature"]
     nature: Option<String>,
-    #[name = "Partner Pokémon"]
+    #[name = "Pokémon"]
     partner_pokemon: Option<String>,
-    #[name = "Starting Region"]
+    #[name = "Region"]
     starting_region: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, poise::Modal)]
+#[name = "Edit Personal Information"]
 struct EditPersonalInfoModal {
     #[name = "Favourite Food"]
     favourite_food: Option<String>,
@@ -615,6 +617,7 @@ struct EditCodesModal {
 }
 
 #[derive(Debug, Clone, Default, poise::Modal)]
+#[name = "Edit Images"]
 struct EditImagesModal {
     #[name = "Thumbnail Image URL"]
     thumbnail_url: Option<String>,

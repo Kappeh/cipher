@@ -564,13 +564,13 @@ impl ProfileEmbed {
         }
 
         if let Some(pokemon_go_code) = self.pokemon_go_code {
-            embed = embed.field(":PokemonGo: Pokémon Go Friend Code", pokemon_go_code, false);
+            embed = embed.field("<:PokemonGo:961206166812250156> Pokémon Go Friend Code", pokemon_go_code, false);
         }
         if let Some(pokemon_pocket_code) = self.pokemon_pocket_code {
-            embed = embed.field(":Pokeball: Pokémon TCG Pocket Friend Code", pokemon_pocket_code, false);
+            embed = embed.field("<:Pokeball:961206135535337513> Pokémon TCG Pocket Friend Code", pokemon_pocket_code, false);
         }
         if let Some(switch_code) = self.switch_code {
-            embed = embed.field(":switch: Nintendo Switch Friend Code", switch_code, false);
+            embed = embed.field("<:switch:1335457825161220111> Nintendo Switch Friend Code", switch_code, false);
         }
 
         embed

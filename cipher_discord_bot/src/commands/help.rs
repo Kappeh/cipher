@@ -67,7 +67,7 @@ where
 {
     let mut commands_field_value = String::new();
     for command in &ctx.framework().options.commands {
-        if !all && command.hide_in_help {
+        if !all && command.hide_in_help || command.slash_action.is_none() {
             continue;
         }
 
@@ -130,7 +130,7 @@ where
 
     let mut subcommands_field_value = String::new();
     for subcommand in &command.subcommands {
-        if !all && subcommand.hide_in_help {
+        if !all && subcommand.hide_in_help || command.slash_action.is_none() {
             continue;
         }
 

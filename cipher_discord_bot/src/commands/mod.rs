@@ -17,7 +17,6 @@ where
         pokeapi::pokeapi(),
         profile::profile(),
         profile::cmu_profile_show(),
-        profile::cmu_profile_edit(),
     ]
 }
 

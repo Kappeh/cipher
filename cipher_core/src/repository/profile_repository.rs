@@ -99,6 +99,7 @@ pub trait ProfileRepository {
     async fn set_active_profile(&mut self, user_id: i32, profile_id: i32) -> Result<bool, RepositoryError<Self::BackendError>>;
 }
 
+#[derive(Debug, Clone)]
 pub struct Profile {
     pub id: i32,
     pub user_id: i32,
@@ -122,6 +123,7 @@ pub struct Profile {
     pub is_active: bool,
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct NewProfile {
     pub user_id: i32,
 
